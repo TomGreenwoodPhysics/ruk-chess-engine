@@ -29,3 +29,5 @@ Thumbs.db
 # stockfish binary / local engines
 stockfish/
 *.nnue
+
+*_file_list.txt
