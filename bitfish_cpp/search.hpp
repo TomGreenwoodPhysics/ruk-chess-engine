@@ -90,6 +90,11 @@ public:
         std::optional<double> time_limit = std::nullopt
     );
 
+    void clear_transposition_table();
+    void clear_search_heuristics();
+    void clear_for_new_position();
+    void clear_for_new_game();
+
     int evaluate_position(const Board& board) const;
     int evaluate_quiet_position(const Board& board) const;
     std::vector<Move> generate_moves(Board& board) const;
@@ -103,6 +108,14 @@ private:
     std::array<std::array<int, 64>, 64> history{};
 
     bool time_is_up() const;
+
+    void reset_killers();
+    void reset_history();
+
+    std::optional<MoveKey> valid_tt_move_key(
+        U64 board_hash,
+        const std::vector<Move>& moves
+    ) const;
 
     std::pair<int, std::optional<Move>> negamax_root(
         Board& board,

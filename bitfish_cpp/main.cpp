@@ -126,10 +126,10 @@ void uci_loop() {
             std::cout << "readyok\n";
         } else if (command == "ucinewgame") {
             board = Board();
-            engine.transposition_table.clear();
+            engine.clear_for_new_game();
         } else if (command.rfind("position", 0) == 0) {
             board = apply_uci_position(board, command);
-            engine.transposition_table.clear();
+            engine.clear_for_new_position();
         } else if (command.rfind("go", 0) == 0) {
             int depth = parse_go_depth(command);
             std::optional<double> movetime = parse_go_movetime(command);

@@ -36,14 +36,64 @@ MoveKey move_key(const Move& move) {
 }
 
 Engine::Engine() {
+    reset_killers();
+    reset_history();
+}
+
+void Engine::reset_killers() {
     for (auto& row : killer_moves) {
         row[0] = std::nullopt;
         row[1] = std::nullopt;
     }
+}
 
+void Engine::reset_history() {
     for (auto& row : history) {
         row.fill(0);
     }
+}
+
+void Engine::clear_transposition_table() {
+    transposition_table.clear();
+}
+
+void Engine::clear_search_heuristics() {
+    reset_killers();
+    reset_history();
+}
+
+void Engine::clear_for_new_position() {
+    clear_transposition_table();
+    clear_search_heuristics();
+}
+
+void Engine::clear_for_new_game() {
+    clear_for_new_position();
+}
+
+std::optional<MoveKey> Engine::valid_tt_move_key(
+    U64 board_hash,
+    const std::vector<Move>& moves
+) const {
+    auto entry = transposition_table.find(board_hash);
+
+    if (entry == transposition_table.end()) {
+        return std::nullopt;
+    }
+
+    if (!entry->second.best_move_key.has_value()) {
+        return std::nullopt;
+    }
+
+    const MoveKey& key = *entry->second.best_move_key;
+
+    for (const Move& move : moves) {
+        if (move_key(move) == key) {
+            return key;
+        }
+    }
+
+    return std::nullopt;
 }
 
 SearchResult Engine::search_best_move(
@@ -57,16 +107,13 @@ SearchResult Engine::search_best_move(
     time_limit = limit;
     stop_search = false;
 
-    for (auto& row : killer_moves) {
-        row[0] = std::nullopt;
-        row[1] = std::nullopt;
-    }
+    reset_killers();
 
     std::vector<Move> legal_moves = board.generate_legal_moves();
     std::optional<Move> best_move = std::nullopt;
 
     if (!legal_moves.empty()) {
-        auto tt_key = get_tt_move_key(board.hash_key);
+        auto tt_key = valid_tt_move_key(board.hash_key, legal_moves);
         auto ordered = order_moves(board, legal_moves, tt_key, 0);
         best_move = ordered.front();
     }
@@ -111,7 +158,7 @@ SearchResult Engine::search_best_move(
             << "info depth " << depth
             << " score cp " << best_score
             << " nodes " << nodes
-            << " tthits " << tt_hits
+            << " tbhits " << tt_hits
             << " time " << static_cast<int>(elapsed_seconds(start_time) * 1000)
             << " pv " << (best_move.has_value() ? move_to_string(*best_move) : "none")
             << "\n";
@@ -157,9 +204,9 @@ std::pair<int, std::optional<Move>> Engine::negamax_root(
     std::optional<Move> best_move = std::nullopt;
 
     U64 board_hash = board.hash_key;
-    auto tt_move_key = get_tt_move_key(board_hash);
 
     std::vector<Move> moves = generate_moves(board);
+    auto tt_move_key = valid_tt_move_key(board_hash, moves);
     moves = order_moves(board, moves, tt_move_key, 0);
 
     int original_alpha = alpha;
@@ -393,13 +440,8 @@ int Engine::negamax(
         }
     }
 
-    std::optional<MoveKey> tt_move_key = std::nullopt;
-
-    if (entry_it != transposition_table.end()) {
-        tt_move_key = entry_it->second.best_move_key;
-    }
-
     std::vector<Move> moves = generate_moves(board);
+    std::optional<MoveKey> tt_move_key = valid_tt_move_key(board_hash, moves);
     moves = order_moves(board, moves, tt_move_key, ply);
 
     int best_score = -INF;
@@ -463,7 +505,8 @@ int Engine::negamax(
         if (alpha >= beta) {
             if (!is_noisy_move(board, move)) {
                 store_killer(ply, move);
-                history[move.from_sq][move.to_sq] += depth * depth;
+                int& hist = history[move.from_sq][move.to_sq];
+                hist = std::min(hist + depth * depth, 1'000'000);
             }
 
             break;

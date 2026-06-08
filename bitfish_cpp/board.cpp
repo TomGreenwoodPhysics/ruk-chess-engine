@@ -540,8 +540,12 @@ std::vector<Move> Board::generate_pseudo_legal_moves() {
     U64 own = occupancy(us);
     U64 enemy = occupancy(them);
     U64 enemy_king = bitboards[them == WHITE ? WK : BK];
+
     enemy &= ~enemy_king;
-    U64 occ = own | enemy;
+
+    // The enemy king must not be capturable, but it must still block occupancy.
+    // Without this, pawns can illegally move forwards onto the enemy king square.
+    U64 occ = own | enemy | enemy_king;
 
     if (us == WHITE) {
         U64 pawns = bitboards[WP];
