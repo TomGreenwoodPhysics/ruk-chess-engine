@@ -32,11 +32,11 @@ os.environ["PATH"] = MSYS2_UCRT64_BIN + os.pathsep + os.environ["PATH"]
 # ---------------------------------------------------------------------
 
 STOCKFISH_ELO = 2000
-NUM_GAMES = 2
+NUM_GAMES = 20
 MAX_PLIES = 400
 
 # depth is a safety cap; time is the main limit
-BITFISH_MAX_DEPTH = 10
+BITFISH_MAX_DEPTH = 1000
 BITFISH_TIME_PER_MOVE = 5.0
 STOCKFISH_TIME_PER_MOVE = 0.1
 

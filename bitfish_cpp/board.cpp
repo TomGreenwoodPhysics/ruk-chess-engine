@@ -444,7 +444,9 @@ void Board::add_knight_moves(std::vector<Move>& moves, int piece, U64 own) {
         auto [sq, next] = pop_lsb(bb);
         bb = next;
 
-        U64 attacks = knight_attacks(sq) & ~own & FULL;
+        int them = piece <= WK ? BLACK : WHITE;
+        U64 enemy_king = bitboards[them == WHITE ? WK : BK];
+        U64 attacks = knight_attacks(sq) & ~own & ~enemy_king & FULL;
 
         while (attacks) {
             auto [to_sq, next_attacks] = pop_lsb(attacks);
@@ -461,7 +463,9 @@ void Board::add_king_moves(std::vector<Move>& moves, int piece, U64 own) {
         auto [sq, next] = pop_lsb(bb);
         bb = next;
 
-        U64 attacks = king_attacks(sq) & ~own & FULL;
+        int them = piece <= WK ? BLACK : WHITE;
+        U64 enemy_king = bitboards[them == WHITE ? WK : BK];
+        U64 attacks = king_attacks(sq) & ~own & ~enemy_king & FULL;
 
         while (attacks) {
             auto [to_sq, next_attacks] = pop_lsb(attacks);
@@ -484,7 +488,9 @@ void Board::add_piece_moves(
         auto [sq, next] = pop_lsb(bb);
         bb = next;
 
-        U64 attacks = attacks_from_slider(sq, deltas, occ) & ~own & FULL;
+        int them = piece <= WK ? BLACK : WHITE;
+        U64 enemy_king = bitboards[them == WHITE ? WK : BK];
+        U64 attacks = attacks_from_slider(sq, deltas, occ) & ~own & ~enemy_king & FULL;
 
         while (attacks) {
             auto [to_sq, next_attacks] = pop_lsb(attacks);
@@ -533,6 +539,8 @@ std::vector<Move> Board::generate_pseudo_legal_moves() {
 
     U64 own = occupancy(us);
     U64 enemy = occupancy(them);
+    U64 enemy_king = bitboards[them == WHITE ? WK : BK];
+    enemy &= ~enemy_king;
     U64 occ = own | enemy;
 
     if (us == WHITE) {
