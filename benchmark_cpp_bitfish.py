@@ -31,13 +31,13 @@ os.environ["PATH"] = MSYS2_UCRT64_BIN + os.pathsep + os.environ["PATH"]
 # benchmark settings
 # ---------------------------------------------------------------------
 
-STOCKFISH_ELO = 2000
-NUM_GAMES = 20
+STOCKFISH_ELO = 2300
+NUM_GAMES = 10
 MAX_PLIES = 400
 
 # depth is a safety cap; time is the main limit
-BITFISH_MAX_DEPTH = 1000
-BITFISH_TIME_PER_MOVE = 5.0
+BITFISH_MAX_DEPTH = 100
+BITFISH_TIME_PER_MOVE = 0.5
 STOCKFISH_TIME_PER_MOVE = 0.1
 
 # true = most stable while debugging; avoids carrying C++ TT/history across positions
