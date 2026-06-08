@@ -129,6 +129,7 @@ void uci_loop() {
             engine.transposition_table.clear();
         } else if (command.rfind("position", 0) == 0) {
             board = apply_uci_position(board, command);
+            engine.transposition_table.clear();
         } else if (command.rfind("go", 0) == 0) {
             int depth = parse_go_depth(command);
             std::optional<double> movetime = parse_go_movetime(command);
@@ -216,6 +217,38 @@ void test_mode() {
 int main(int argc, char* argv[]) {
     if (argc > 1 && std::string(argv[1]) == "uci") {
         uci_loop();
+    } else if (argc > 2 && std::string(argv[1]) == "fen") {
+        std::string fen;
+
+        for (int i = 2; i < argc; ++i) {
+            if (!fen.empty()) {
+                fen += " ";
+            }
+
+            fen += argv[i];
+        }
+
+        Board board(fen);
+        Engine engine;
+
+        board.print_board();
+
+        SearchResult result = engine.search_best_move(
+            board,
+            10,
+            5.0
+        );
+
+        if (result.best_move.has_value()) {
+            std::cout << "best move: " << move_to_string(*result.best_move) << "\n";
+        } else {
+            std::cout << "best move: none\n";
+        }
+
+        std::cout << "score: " << result.score << "\n";
+        std::cout << "depth: " << result.depth << "\n";
+        std::cout << "nodes: " << result.nodes << "\n";
+        std::cout << "time: " << result.time_taken << "s\n";
     } else {
         test_mode();
     }
